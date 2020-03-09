@@ -1,0 +1,207 @@
+﻿
+Exploratory Data Analysis on Diamond Dataset using R
+Abstract: The socioeconomic and political history of the diamond industryis fascinating. Understanding diamonds are important because each diamond is unique in its way. Even an expert cannot incorporate as much information about price as a picture of the entire market without analysingthe characteristics of the diamonds. Hadley’s ggplot2 ships with a data set that records the carat size and the price of more than 50 thousand diamonds, fromDiamond Search Enginecollectedin 2008. In this paper we perform an exploratory data analysis using R on the diamond dataset to understand the diamond markettrends, quality and price by analysingfactors for Market Research. The difficulties that may arise with the analysis include, improper dataset, Presence of Outliers, Faulty Data etc. Also since the dataset dates back to 2008, the estimates may not be used with today’s market trends.
+
+Introduction:
+The starting step in exploring any big amount of data is Exploratory Data Analysis(EDA). It starts with a basic understanding of data and the framing of which factors to focus on. This is done with a broad view of the patterns and quantitative techniques which give a basic understanding of what the dataset depicts. Our quest forclues that help in framing the future steps and the question that arise from the data set is what truly drives the Exploratory Data Analysis, as there are no standard set of rules which tell the user how to approach data. That aside EDA gives life to a set of statistical methods which help to define the purpose of the data. Almost all EDA practices are graphical in nature with a few quantitative techniques. The motive for the high dependence on graphics is that by its very nature the main role of EDA is toliberally investigate, and graphs gives the examiners unparalleled chances to do as such, tempting the information to uncover its basic mysteries, and being constantly prepared to increase some new, regularly unsuspected, understanding into the information. In blend with the characteristic example acknowledgment abilities that we as a whole have, design gives, obviously, unparalleled energy to do this.
+
+library(ggplot2)
+## Warning: package 'ggplot2' was built under R version 3.1.3
+data(diamonds)
+summary(diamonds)
+##      carat               cut        color        clarity     
+##  Min.   :0.2000   Fair     : 1610   D: 6775   SI1    :13065  
+##  1st Qu.:0.4000   Good     : 4906   E: 9797   VS2    :12258  
+##  Median :0.7000   Very Good:12082   F: 9542   SI2    : 9194  
+##  Mean   :0.7979   Premium  :13791   G:11292   VS1    : 8171  
+##  3rd Qu.:1.0400   Ideal    :21551   H: 8304   VVS2   : 5066  
+##  Max.   :5.0100                     I: 5422   VVS1   : 3655  
+##                                     J: 2808   (Other): 2531  
+##      depth           table           price             x         
+##  Min.   :43.00   Min.   :43.00   Min.   :  326   Min.   : 0.000  
+##  1st Qu.:61.00   1st Qu.:56.00   1st Qu.:  950   1st Qu.: 4.710  
+##  Median :61.80   Median :57.00   Median : 2401   Median : 5.700  
+##  Mean   :61.75   Mean   :57.46   Mean   : 3933   Mean   : 5.731  
+##  3rd Qu.:62.50   3rd Qu.:59.00   3rd Qu.: 5324   3rd Qu.: 6.540  
+##  Max.   :79.00   Max.   :95.00   Max.   :18823   Max.   :10.740  
+##                                                                  
+##        y                z         
+##  Min.   : 0.000   Min.   : 0.000  
+##  1st Qu.: 4.720   1st Qu.: 2.910  
+##  Median : 5.710   Median : 3.530  
+##  Mean   : 5.735   Mean   : 3.539  
+##  3rd Qu.: 6.540   3rd Qu.: 4.040  
+##  Max.   :58.900   Max.   :31.800  
+## 
+dim(diamonds)
+## [1] 53940    10
+We can answer how many observations (53,940), how many variables (only 10), and how many of those variables are ordered factor (only 3). We can also learn about the best diamond color by using the command ?diamonds.
+Let’s test the power now of GGplot2 with a simple histogram of diamond prices.
+ggplot(data=diamonds) + geom_histogram(binwidth=500, aes(x=diamonds$price)) + ggtitle("Diamond Price Distribution") + xlab("Diamond Price U$") + ylab("Frequency") + theme_minimal()
+
+This is a long tail distribution, with a high concentration of observations below the U$5,000 mark. We can get mean and median by running simple R commands:
+mean(diamonds$price)
+## [1] 3932.8
+median(diamonds$price)
+## [1] 2401
+Supposed we want to know the following:
+1. How many cost less than U$500? 
+2. How many cost less than U$250? 
+3. How many cost equal to U$15,000 or more? 
+sum(diamonds$price < 500)
+## [1] 1729
+sum(diamonds$price < 250)
+## [1] 0
+sum(diamonds$price >= 15000)
+## [1] 1656
+Let’s get closer to that peak
+There is a very visible peak in the histogram. It comes very early in the analysis of the chart. Let’s get very close to observe the higher than expected frequency.
+This is a first attempt:
+ggplot(data=diamonds) + geom_histogram(binwidth=500, aes(x=diamonds$price)) + ggtitle("Diamond Price Distribution") + xlab("Diamond Price U$ - Binwidth 500") + ylab("Frequency") + theme_minimal() + xlim(0,2500)
+
+A little blocky? The binwidth is definitively not the best, as we left it at 500 and put a limit of value to less than U$2,500. Maybe we should lower the binwidth to see how that changes the picture:
+ggplot(data=diamonds) + geom_histogram(binwidth=100, aes(x=diamonds$price)) + ggtitle("Diamond Price Distribution") + xlab("Diamond Price U$- Binwidth 100") + ylab("Frequency") + theme_minimal() + xlim(0,2500)
+
+Did you see what happened? By changing geom_histogram(binwidth=100 the frequency dropped from 10,000 to 2,000 in diamonds between U$500 and U$1,000. This is a real change in the graph but impossible to see unless you change the bins manually. Let’s kick it up one notch with bins of 50:
+ggplot(data=diamonds) + geom_histogram(binwidth=50, aes(x=diamonds$price)) + ggtitle("Diamond Price Distribution") + xlab("Diamond Price U$ - Binwidth 50") + ylab("Frequency") + theme_minimal() + xlim(0,2500)
+
+Another drop in frequency, this time to no more than 1,500. That is the reason Data Scientist are actual people and RStudio and R haven’t taken over!
+Bin selection will play a significant role in visualizations, with a possible change in frequency readouts and shape of the curve or function.
+UDACITY thinks that asking for five histograms, broken down by cut, was going to be a challenge. Sadly for them, and luckily for aspiring Data Scientits like us, this is not the case with R and ggplot2. Using the facet_wrap(~cut) command is almost too easy to produce the graphs:
+ggplot(data=diamonds) + geom_histogram(binwidth=100, aes(x=diamonds$price)) + ggtitle("Diamond Price Distribution by Cut") + xlab("Diamond Price U$") + ylab("Frequency") + theme_minimal() + facet_wrap(~cut)
+
+What if we want to see the cut for the highest priced diamond? This one is a little tricky, but the easiest way is to subset the diamonds data using as the filter the logical expression price == max(price). It is unusual but it works.
+subset(diamonds, price == max(price))
+##       carat     cut color clarity depth table price   x    y    z
+## 27750  2.29 Premium     I     VS2  60.8    60 18823 8.5 8.47 5.16
+And the answer is Premium cut for a diamond of 2.29 carat that sold at U$18,823! Getting the cut of the lowest priced diamond is a similar task.
+subset(diamonds, price == min(price))
+##   carat     cut color clarity depth table price    x    y    z
+## 1  0.23   Ideal     E     SI2  61.5    55   326 3.95 3.98 2.43
+## 2  0.21 Premium     E     SI1  59.8    61   326 3.89 3.84 2.31
+Looks like we have a tie between to units, both sold at U$326, one of 0.23 carat and Ideal cut, and another of 0.21 carats and Premium cut.
+The last question is which cut has the lowest median price. This one is VERY tricky, since it involves lots of query in the data. The long and easy way is to use the which command to subset data vectors and then get the median of those:
+a = diamonds[which(diamonds$cut == "Fair"),]
+b = diamonds[which(diamonds$cut == "Good"),]
+c = diamonds[which(diamonds$cut == "Very Good"),]
+d = diamonds[which(diamonds$cut == "Premium"),]
+e = diamonds[which(diamonds$cut == "Ideal"),]
+
+median(a$price)
+## [1] 3282
+median(b$price)
+## [1] 3050.5
+median(c$price)
+## [1] 2648
+median(d$price)
+## [1] 3185
+median(e$price)
+## [1] 1810
+Going back to our grid histogram, let’s get different frequency scales (the y axis) to accomodate for specific patterns. It’s harder to see patterns if all five charts use the same scale for comparison and patterns become lost in the translation. The command is very easy.
+ggplot(data=diamonds) + geom_histogram(binwidth=100, aes(x=diamonds$price)) + ggtitle("Diamond Price Distribution by Cut") + xlab("Diamond Price U$") + ylab("Frequency") + theme_minimal() + facet_wrap(~cut, scales="free_y")
+
+You can now see how different graphs have different Y scales. For example Fair cut diamonds have a Y scale maximizing at 600, while Ideal diamonds have a Y scale topping at 2,500. This is just the effect of using scale="free_y" in the facet_wrap layer.
+Let’s work now on plotting price per carat of different cuts.
+ggplot(data=diamonds) + geom_histogram(binwidth=50, aes(x=diamonds$price/diamonds$carat)) + ggtitle("Diamond Price per Carat Distribution by Cut") + xlab("Diamond Price per Carat U$") + ylab("Frequency") + theme_minimal() + facet_wrap(~cut)
+
+UDACITY also asks for log10 scale. Let’s work now on plotting price per carat of different cuts and using Log10.
+ggplot(data=diamonds) + geom_histogram(binwidth=0.01, aes(x=diamonds$price/diamonds$carat)) + ggtitle("Diamond Price per Carat Distribution by Cut") + xlab("Diamond Price per Carat U$ - LOG 10 Scale") + ylab("Frequency") + theme_minimal() + facet_wrap(~cut) + scale_x_log10()
+
+It’s easier to see how price per carat raises with cut quality. Notice how I change the bin size to make sense on Log10 scale (else it look terrible…)
+A loook into boxplots
+The next assignmen is about investigating the price of diamonds using box plots,numerical summaries, and one of the following categorical variables: cut, clarity, or color.
+ggplot(diamonds, aes(factor(cut), price, fill=cut)) + geom_boxplot() + ggtitle("Diamond Price according Cut") + xlab("Type of Cut") + ylab("Diamond Price U$") + coord_cartesian(ylim=c(0,7500))
+
+It’s hard to draw conclusions; it seems that cut of all types carry prices of all types, not really a way to determine how good or expensive a diamond is. I suspect people never take a magnifying glass and really look at the cut when they choose a diamond unless they are true proffesionals. Let’s see the same chart using clarity
+ggplot(diamonds, aes(factor(clarity), price, fill=clarity)) + geom_boxplot() + ggtitle("Diamond Price according Clarity") + xlab("Clarity") + ylab("Diamond Price U$") + coord_cartesian(ylim=c(0,7500))
+
+OK! This is more meaningful, we even get a few outliers (I limited the number of outliers by using xlim=c(0,7500)) or no more than U$7,500 dollars. So clarity is a meaningful variable where cut is not. We can conclude people see and appreciate more shiny things?
+The next part is answering four questions about color and price range inside a IQR range. These are the following.
+1. What is the price range for the middle 50% of diamonds with color D (best color)? 
+2. What is the price range for the middle 50% of diamonds with color J (worst color)? 
+3. What is the IQR for diamonds with the best color (color D)? 
+4. What is the IQR for diamonds with the worst color (color J)? 
+To use some instructor notes,we can use the function IQR() to find the interquartile range. Pass it a subset of the diamonds data frame. For example IQR(subset(diamonds, price <1000)$price) subset returns a data frame (so we need to use $price on the end to access that variable.)
+However for some reason this method did not work for me, so I decided to simply create a subset and take it from there.
+d = subset(diamonds, diamonds$color == 'D')
+j = subset(diamonds, diamonds$color == 'J')
+
+summary(d)
+##      carat               cut       color       clarity         depth     
+##  Min.   :0.2000   Fair     : 163   D:6775   SI1    :2083   Min.   :52.2  
+##  1st Qu.:0.3600   Good     : 662   E:   0   VS2    :1697   1st Qu.:61.0  
+##  Median :0.5300   Very Good:1513   F:   0   SI2    :1370   Median :61.8  
+##  Mean   :0.6578   Premium  :1603   G:   0   VS1    : 705   Mean   :61.7  
+##  3rd Qu.:0.9050   Ideal    :2834   H:   0   VVS2   : 553   3rd Qu.:62.5  
+##  Max.   :3.4000                    I:   0   VVS1   : 252   Max.   :71.6  
+##                                    J:   0   (Other): 115                 
+##      table          price             x               y        
+##  Min.   :52.0   Min.   :  357   Min.   :0.000   Min.   :0.000  
+##  1st Qu.:56.0   1st Qu.:  911   1st Qu.:4.590   1st Qu.:4.600  
+##  Median :57.0   Median : 1838   Median :5.230   Median :5.240  
+##  Mean   :57.4   Mean   : 3170   Mean   :5.417   Mean   :5.421  
+##  3rd Qu.:59.0   3rd Qu.: 4214   3rd Qu.:6.180   3rd Qu.:6.180  
+##  Max.   :73.0   Max.   :18693   Max.   :9.420   Max.   :9.340  
+##                                                                
+##        z        
+##  Min.   :0.000  
+##  1st Qu.:2.820  
+##  Median :3.220  
+##  Mean   :3.343  
+##  3rd Qu.:3.840  
+##  Max.   :6.270  
+## 
+IQR(d$price)
+## [1] 3302.5
+summary(j)
+##      carat              cut      color       clarity        depth      
+##  Min.   :0.230   Fair     :119   D:   0   SI1    :750   Min.   :43.00  
+##  1st Qu.:0.710   Good     :307   E:   0   VS2    :731   1st Qu.:61.20  
+##  Median :1.110   Very Good:678   F:   0   VS1    :542   Median :62.00  
+##  Mean   :1.162   Premium  :808   G:   0   SI2    :479   Mean   :61.89  
+##  3rd Qu.:1.520   Ideal    :896   H:   0   VVS2   :131   3rd Qu.:62.70  
+##  Max.   :5.010                   I:   0   VVS1   : 74   Max.   :73.60  
+##                                  J:2808   (Other):101                  
+##      table           price             x                y         
+##  Min.   :51.60   Min.   :  335   Min.   : 3.930   Min.   : 3.900  
+##  1st Qu.:56.00   1st Qu.: 1860   1st Qu.: 5.700   1st Qu.: 5.718  
+##  Median :58.00   Median : 4234   Median : 6.640   Median : 6.630  
+##  Mean   :57.81   Mean   : 5324   Mean   : 6.519   Mean   : 6.518  
+##  3rd Qu.:59.00   3rd Qu.: 7695   3rd Qu.: 7.380   3rd Qu.: 7.380  
+##  Max.   :68.00   Max.   :18710   Max.   :10.740   Max.   :10.540  
+##                                                                   
+##        z        
+##  Min.   :2.460  
+##  1st Qu.:3.530  
+##  Median :4.110  
+##  Mean   :4.033  
+##  3rd Qu.:4.580  
+##  Max.   :6.980  
+## 
+IQR(j$price)
+## [1] 5834.5
+This is very strange (the results are fine), people actually pay more on average for a J color diamonds (worst color) than for a D color diamond (best color)!
+How about we investigate the price per carat of diamonds across the different colors of diamonds using boxplots? This sounds like a big effort but it’s actually just a little change of code.
+ggplot(diamonds, aes(factor(color), (price/carat), fill=color)) + geom_boxplot() + ggtitle("Diamond Price per Carat according Color") + xlab("Color") + ylab("Diamond Price per Carat U$")
+
+**Now that is a big quantity of outliers for color D. I can see where people spend their money, not on the under U$7,500 range, but rather on the most unique rocks. We can limit the price range to under U$7,500 and see a smaller picture.
+ggplot(diamonds, aes(factor(color), (price/carat), fill=color)) + geom_boxplot() + ggtitle("Diamond Price per Carat according Color") + xlab("Color") + ylab("Diamond Price per Carat U$") + coord_cartesian(ylim=c(0,7500))
+
+How strange, under the U$7,500 range the price per carat of diamonds is actually more expensive on color G (medium quality on the scale) than any other color.
+The more I study these charts, the more I see that people know very little about diamonds, and pay way more for medium-quality rocks because cut, color and clarity are still very hard to define and detect for the untrained eye.
+For the next question, we will investigate carat weight using a frequency polygon chart. I have not used many of this type of chart, so let’s see what we get.
+ggplot(data=diamonds, aes(x=carat)) + geom_freqpoly() + ggtitle("Diamond Frequency by Carat") + xlab("Carat Size") + ylab("Count")
+## stat_bin: binwidth defaulted to range/30. Use 'binwidth = x' to adjust this.
+
+
+ggplot(data=diamonds, aes(x=carat)) + geom_freqpoly(binwidth = 0.025) + ggtitle("Diamond Frequency by Carat") + xlab("Carat Size") + ylab("Count") + scale_x_continuous(minor_breaks = seq(0, 5.5, 0.1))
+
+REFERENCES
+Hastie T, Tibshirani R, Friedman JH. 2001 The Elements of Statistical Learning. Springer: New York.
+ http://www.rpubs.com/ameilij/EDA_lesson3
+https://r4ds.had.co.nz/exploratory-data-analysis.html
+https://www.datacamp.com/community/tutorials/make-histogram-basic-r?utm_source=adwords_ppc&utm_campaignid=1455363063&utm_adgroupid=65083631748&utm_device=c&utm_keyword=&utm_matchtype=b&utm_network=g&utm_adpostion=1t1&utm_creative=332602034358&utm_targetid=dsa-473406586075&utm_loc_interest_ms=&utm_loc_physical_ms=1007788&gclid=EAIaIQobChMI_cS87-3P5QIVybTtCh14gwDXEAAYASAAEgJBgvD_BwE
+https://www.ijrte.org/wp-content/uploads/papers/v7i6s2/F11170476S219.pdf
+
+CONCLUSION
+Diamonds with D colour have less medianprice and J has highest median price. This is partly due to the fact that the carat plays a major role in the diamond price and we don’t have a diamond with D colour and having good carat size. The fact that D has low median price doesn’t necessarily meanit is cheap.This is the sole factor which independently determines the price. The bigger the carat sizes the more the price of the diamond.The diamond with the idea cut have low price but this doesn’t mean all the diamonds with good cuts having low price.The price increases as the cut rating increases and doesn’t decrease until it comes close to Ideal cut diamond.Diamonds with the ideal cut are the ones with the least median price for a unit carat. Moreover we can see the price increase as the cut becomesbetter and finally decreases as the cut becomes best.Under constant carats it is seen diamonds with less clarity are in general cheaper than the diamonds with better clarity. In case of colour we have a slight variation in terms of colour D whose price although high has a less median price which states D colour are not the most bought diamonds.
